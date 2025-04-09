@@ -1,0 +1,51 @@
+<script setup lang="ts">
+import { ref } from "vue";
+import { api } from "@/assets/api";
+import apiClient from "@/assets/api";
+
+const searchParams = ref({
+    tid: null,
+});
+
+const classes = ref([]);
+const loading = ref(false);
+
+function fetchClasses(params: any) {
+    return apiClient.get(`${api.apiUrl}/class/student/list`, { params });
+}
+
+async function handleSearch(){
+    if (loading.value) return;
+    loading.value = true;
+    try {
+        const response = await fetchClasses(searchParams.value);
+        classes.value = response.data.data.items;
+    } catch (error) {
+        console.error("查询失败:", error);
+    }
+    loading.value = false;
+};
+
+handleSearch();
+</script>
+
+<template>
+    <a-card title="我的班级" style="max-width: 800px; margin: auto;">
+        <a-form layout="inline">
+            <a-form-item>
+                <a-button type="primary" html-type="submit" @click="handleSearch">刷新</a-button>
+            </a-form-item>
+        </a-form>
+        <a-table :dataSource="classes" :loading="loading" rowKey="id" bordered>
+            <a-table-column title="班级名称" dataIndex="name" key="name" />
+            <a-table-column title="教师" dataIndex="teacherName" key="teacherName" />
+            <template #bodyCell="{ column, record }">
+                <template v-if="column.dataIndex === 'name'">
+                    <router-link :to="`/class/${record.id}`">
+                        {{ record.name }}
+                    </router-link>
+                </template>
+            </template>
+        </a-table>
+    </a-card>
+</template> 
