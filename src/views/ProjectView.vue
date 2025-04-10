@@ -79,19 +79,30 @@ async function loadProject() {
     } catch (error) {
         console.error("查询失败:", error);
     }
-    files.value = [{
-        fileName: 'file1',
-        description: 'file1',
-        studentName: 'lokyoh',
-    },{
-        fileName: 'file2',
-        description: 'file2',
-        studentName: 'lokyoh',
-    },]
     fload.value = false;
 };
 
 loadProject();
+
+function newTask(){
+
+}
+
+function addTeacher(){
+
+}
+
+function uploadFile(){
+
+}
+
+function addMember(){
+
+}
+
+function changeInfo(){
+    
+}
 </script>
 
 <template>
@@ -102,7 +113,7 @@ loadProject();
                 <p>{{ project.description }}</p>
                 <var style="display: flex;justify-content: right;"
                     v-show="project.role == 'leader' && project.status == 'normal'">
-                    <a-button>修改信息</a-button>
+                    <a-button @click="changeInfo">修改信息</a-button>
                 </var>
             </a-card>
             <a-card title="任务" v-show="project.role != null">
@@ -125,7 +136,7 @@ loadProject();
                 </a-table>
                 <var style="display: flex;justify-content: right;"
                     v-show="project.role == 'leader' && project.status == 'normal'">
-                    <a-button>新建任务</a-button>
+                    <a-button @click="newTask">新建任务</a-button>
                 </var>
             </a-card>
             <a-card title="文件">
@@ -149,7 +160,7 @@ loadProject();
                 </a-table>
                 <var style="display: flex;justify-content: right;"
                     v-show="(project.role == 'leader' || project.role == 'member') && project.status == 'normal'">
-                    <a-button>上传文件</a-button>
+                    <a-button @click="uploadFile">上传文件</a-button>
                 </var>
             </a-card>
         </a-layout-content>
@@ -160,7 +171,7 @@ loadProject();
                 </p>
                 <var style="display: flex;justify-content: center;"
                     v-show="project.role == 'leader' && project.teacherName == null && project.status == 'normal'">
-                    <a-button>添加导师</a-button>
+                    <a-button @click="addTeacher">添加导师</a-button>
                 </var>
             </a-card>
             <a-card title="所属班级" v-show="project.classId != null">
@@ -180,7 +191,7 @@ loadProject();
                 </a-list>
                 <var style="display: flex;justify-content: center;"
                     v-show="project.role == 'leader' && project.status == 'normal'">
-                    <a-button>添加成员</a-button>
+                    <a-button @click="addMember">添加成员</a-button>
                 </var>
             </a-card>
         </a-layout-sider>
