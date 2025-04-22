@@ -96,6 +96,7 @@ const onNPClose = () => {
             <a-form-item>
                 <a-button type="primary" html-type="submit" @click="handleSearch">查询</a-button>
             </a-form-item>
+            <a-button @click="newProject">新项目</a-button>
         </a-form>
         <a-table :dataSource="projects" :loading="loading" rowKey="id" bordered>
             <a-table-column title="项目名称" dataIndex="name" key="name" />

@@ -19,10 +19,10 @@ if (role) {
             break;
         default:
             api.clearCookies()
-            window.location.replace("./login");
+            window.location.replace("/login");
     }
 } else {
-    window.location.replace("./login");
+    window.location.replace("/login");
 }
 
 </script>

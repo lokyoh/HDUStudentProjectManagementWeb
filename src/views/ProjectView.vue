@@ -116,7 +116,7 @@ const onNPClose = () => {
                 <p>{{ project.description }}</p>
                 <var style="display: flex;justify-content: right;"
                     v-show="project.role == 'leader' && project.status == 'normal'">
-                    <a-button>修改信息</a-button>
+                    <a-button @click="changeInfo">修改信息</a-button>
                 </var>
             </a-card>
             <a-card title="任务" v-show="project.role != null">
@@ -163,7 +163,7 @@ const onNPClose = () => {
                 </a-table>
                 <var style="display: flex;justify-content: right;"
                     v-show="(project.role == 'leader' || project.role == 'member') && project.status == 'normal'">
-                    <a-button>上传文件</a-button>
+                    <a-button @click="uploadFile">上传文件</a-button>
                 </var>
             </a-card>
         </a-layout-content>
@@ -174,7 +174,7 @@ const onNPClose = () => {
                 </p>
                 <var style="display: flex;justify-content: center;"
                     v-show="project.role == 'leader' && project.teacherName == null && project.status == 'normal'">
-                    <a-button>添加导师</a-button>
+                    <a-button @click="addTeacher">添加导师</a-button>
                 </var>
             </a-card>
             <a-card title="所属班级" v-show="project.classId != null">
@@ -194,7 +194,7 @@ const onNPClose = () => {
                 </a-list>
                 <var style="display: flex;justify-content: center;"
                     v-show="project.role == 'leader' && project.status == 'normal'">
-                    <a-button>添加成员</a-button>
+                    <a-button @click="addMember">添加成员</a-button>
                 </var>
             </a-card>
         </a-layout-sider>
