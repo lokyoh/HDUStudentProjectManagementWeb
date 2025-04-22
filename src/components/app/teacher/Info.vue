@@ -4,10 +4,9 @@ import { message } from "ant-design-vue";
 import { api } from "@/assets/api";
 import apiClient from "@/assets/api";
 
-const studentInfo = ref({
+const teacherInfo = ref({
     name: null,
-    studentId: null,
-    classNumber: null,
+    teacherId: null,
     email: null,
     phone: null,
 });
@@ -15,11 +14,11 @@ const studentInfo = ref({
 const loading = ref(false);
 
 function fetchInfo() {
-    return apiClient.get(`${api.apiUrl}/student/info`, {});
+    return apiClient.get(`${api.apiUrl}/teacher/info`, {});
 }
 
 function ChangeInfo(params: any) {
-    return apiClient.post(`${api.apiUrl}/student/info/change?p=${formData.value.oldPassword}`, params, {headers: {"Content-Type": "application/json",},});
+    return apiClient.post(`${api.apiUrl}/teacher/info/change?p=${formData.value.oldPassword}`, params, {headers: {"Content-Type": "application/json",},});
 }
 
 async function handleGet(){
@@ -28,7 +27,7 @@ async function handleGet(){
     try {
         const response = await fetchInfo();
         if (response.data.code==0){
-            studentInfo.value = response.data.data;
+            teacherInfo.value = response.data.data;
             resetForm();
         }else{
             alert(response.data.message);
@@ -61,9 +60,8 @@ handleGet();
 const isEditing = ref(false);
 
 const formData = ref({
-  class: studentInfo.value.classNumber,
-  email: studentInfo.value.email,
-  phone: studentInfo.value.phone,
+  email: teacherInfo.value.email,
+  phone: teacherInfo.value.phone,
   oldPassword: "",
   password: "",
   confirmPassword: "",
@@ -77,9 +75,8 @@ const toggleEdit = () => {
 };
 
 const resetForm = () => {
-  formData.value.class = studentInfo.value.classNumber;
-  formData.value.email = studentInfo.value.email;
-  formData.value.phone = studentInfo.value.phone;
+  formData.value.email = teacherInfo.value.email;
+  formData.value.phone = teacherInfo.value.phone;
   formData.value.oldPassword = "";
   formData.value.password = "";
   formData.value.confirmPassword = "";
@@ -94,19 +91,15 @@ const passwordsMatch = computed(() => {
     <a-card title="我的信息" style="max-width: 600px; margin: auto;">
     <template v-if="!isEditing">
       <a-descriptions bordered>
-        <a-descriptions-item label="姓名">{{ studentInfo.name }}</a-descriptions-item>
-        <a-descriptions-item label="学号">{{ studentInfo.studentId }}</a-descriptions-item>
-        <a-descriptions-item label="班级">{{ studentInfo.classNumber }}</a-descriptions-item>
-        <a-descriptions-item label="邮箱">{{ studentInfo.email }}</a-descriptions-item>
-        <a-descriptions-item label="电话">{{ studentInfo.phone }}</a-descriptions-item>
+        <a-descriptions-item label="姓名">{{ teacherInfo.name }}</a-descriptions-item>
+        <a-descriptions-item label="教师号">{{ teacherInfo.teacherId }}</a-descriptions-item>
+        <a-descriptions-item label="邮箱">{{ teacherInfo.email }}</a-descriptions-item>
+        <a-descriptions-item label="电话">{{ teacherInfo.phone }}</a-descriptions-item>
       </a-descriptions>
       <a-button type="primary" style="margin-top: 10px" @click="toggleEdit">修改信息</a-button>
     </template>
     <template v-else>
       <a-form layout="vertical">
-        <a-form-item label="班级">
-          <a-input v-model:value="formData.class" />
-        </a-form-item>
         <a-form-item label="邮箱">
           <a-input v-model:value="formData.email" />
         </a-form-item>

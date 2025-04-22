@@ -4,17 +4,17 @@ import { api } from "@/assets/api";
 import apiClient from "@/assets/api";
 
 const searchParams = ref({
-    creatorId: null,
-    classId: null,
-    status: null,
-    reviewStatus: null,
+    // creatorId: null,
+    // classId: null,
+    // status: null,
+    // reviewStatus: null,
 });
 
 const tasks = ref([]);
 const loading = ref(false);
 
 function fetchTasks(params: any) {
-    return apiClient.get(`${api.apiUrl}/task/list`, { params });
+    return apiClient.get(`${api.apiUrl}/review/list`, { params });
 }
 
 async function handleSearch(){
@@ -33,8 +33,8 @@ handleSearch();
 </script>
 
 <template>
-    <a-card title="我的任务">
-        <a-form layout="inline">
+    <a-card title="我的审批">
+        <!-- <a-form layout="inline">
             <a-form-item label="状态">
                 <a-select v-model:value="searchParams.status" placeholder="选择状态">
                     <a-select-option value="">未选择</a-select-option>
@@ -46,22 +46,18 @@ handleSearch();
             <a-form-item>
                 <a-button type="primary" html-type="submit" @click="handleSearch">查询</a-button>
             </a-form-item>
-        </a-form>
+        </a-form> -->
         <a-table :dataSource="tasks" :loading="loading" rowKey="id" bordered :scroll="{ x: 'max-content' }">
-            <a-table-column title="任务名称" dataIndex="name" key="name" />
-            <a-table-column title="任务描述" dataIndex="description" key="description" />
+            <a-table-column title="任务名称" dataIndex="taskName" key="taskName" />
             <a-table-column title="项目名称" dataIndex="projectName" key="projectName" />
-            <a-table-column title="负责人" dataIndex="assigner" key="assigner" />
-            <a-table-column title="截至时间" dataIndex="dueDate" key="dueDate" />
             <a-table-column title="状态" dataIndex="status" key="status" />
-            <a-table-column title="角色" dataIndex="role" key="role" />
-            <a-table-column title="分配日期" dataIndex="assignedAt" key="assignedAt" />
-            <a-table-column title="进度" dataIndex="progress" key="progress" />
-            <a-table-column title="进度描述" dataIndex="progressDescription" key="progressDescription" />
+            <a-table-column title="申请日期" dataIndex="createdAt" key="createdAt" />
+            <a-table-column title="审批日期" dataIndex="reviewedAt" key="reviewedAt" />
+            <a-table-column title="操作" dataIndex="action" key="action" />
             <template #bodyCell="{ column, record }">
-                <template v-if="column.dataIndex === 'name'">
+                <template v-if="column.dataIndex === 'taskName'">
                     <router-link :to="`/task/${record.id}`">
-                        {{ record.name }}
+                        {{ record.taskName }}
                     </router-link>
                 </template>
                 <template v-if="column.dataIndex === 'projectName'">
@@ -70,10 +66,17 @@ handleSearch();
                     </router-link>
                 </template>
                 <template v-if="column.dataIndex === 'status'">
-                    {{ api.transTaskStatus(record.status) }}
+                    {{ api.transReviewStatus(record.status) }}
                 </template>
-                <template v-if="column.dataIndex === 'progress'">
-                    {{ record.progress ? (record.progress * 100).toFixed(2) + '%' : '0%' }}
+                <template v-if="column.dataIndex === 'action'">
+                    <span v-if="record.status !== 'pending'">
+                        已审批
+                    </span>
+                    <span v-else>
+                        <router-link :to="`/review/${record.id}`">
+                            审批
+                        </router-link>
+                    </span>
                 </template>
             </template>
         </a-table>

@@ -70,6 +70,19 @@ class API {
                 return status;
         }
     }
+
+    transReviewStatus(status: any) {
+        switch (status) {
+            case "pending":
+                return "待审核";
+            case "pass":
+                return "通过";
+            case "fail":
+                return "不通过";
+            default:
+                return status;
+        }
+    }
 }
 
 export let api = new API();

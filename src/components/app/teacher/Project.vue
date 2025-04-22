@@ -68,8 +68,7 @@ const onNPClose = () => {
 </script>
 
 <template>
-    <a-card title="我的项目">
-        <template #extra><a-button @click="showDrawer" type="primary">新建项目</a-button></template>
+    <a-card title="指导项目">
         <a-form layout="inline">
             <a-form-item label="创建者 ID">
                 <a-input v-model:value="searchParams.creatorId" placeholder="输入创建者 ID" />
@@ -105,7 +104,6 @@ const onNPClose = () => {
             <a-table-column title="状态" dataIndex="status" key="status" />
             <a-table-column title="开始日期" dataIndex="startDate" key="startDate" />
             <a-table-column title="结束日期" dataIndex="endDate" key="endDate" />
-            <a-table-column title="角色" dataIndex="role" key="role" />
             <template #bodyCell="{ column, record }">
                 <template v-if="column.dataIndex === 'name'">
                     <router-link :to="`/project/${record.id}`">
@@ -117,31 +115,10 @@ const onNPClose = () => {
                         {{ record.className }}
                     </router-link>
                 </template>
-                <template v-if="column.dataIndex === 'role'">
-                    {{ api.transProjectRole(record.role) }}
-                </template>
                 <template v-if="column.dataIndex === 'status'">
                     {{ api.transProjectStatus(record.status) }}
                 </template>
             </template>
         </a-table>
     </a-card>
-    <a-drawer
-        title="新建项目"
-        :width="720"
-        :open="NPopen"
-        :body-style="{ paddingBottom: '80px' }"
-        :footer-style="{ textAlign: 'right' }"
-        @close="onNPClose"
-    >
-        <a-form :model="PForm" :rules="PFRules" layout="horizontal" @finish="handleNewProject">
-            <a-form-item label="姓名" name="name">
-                <a-input v-model:value="PForm.name" placeholder="请输入项目名称"></a-input>
-            </a-form-item>
-            <a-form-item label="描述" name="description">
-                <a-textarea v-model:value="PForm.description" placeholder="请输入项目描述"></a-textarea>
-            </a-form-item>
-            <a-button type="primary" html-type="submit">创建</a-button>
-        </a-form>
-    </a-drawer>
 </template> 

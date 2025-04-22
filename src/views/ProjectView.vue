@@ -1,9 +1,10 @@
 <script setup lang="ts">
-import { ref } from "vue";
+import { reactive, ref } from "vue";
 import { api } from "@/assets/api";
 import apiClient from "@/assets/api";
 import { useRoute } from 'vue-router';
 import AppHeader from "../components/Header.vue";
+import type { Rule } from "ant-design-vue/es/form";
 
 const route = useRoute();
 
@@ -11,15 +12,15 @@ function fetchProject(id: any) {
     return apiClient.get(`${api.apiUrl}/project/get/${id}`);
 }
 
-function fetchMemers(id: any) {
+function fetchProjectMemers(id: any) {
     return apiClient.get(`${api.apiUrl}/project/members/${id}`);
 }
 
-function fetchTask(id: any) {
+function fetchPrjectTasks(id: any) {
     return apiClient.get(`${api.apiUrl}/task/project/${id}`);
 }
 
-function fetchProjectFile(id: any) {
+function fetchProjectFiles(id: any) {
     return apiClient.get(`${api.apiUrl}/file/project/${id}`);
 }
 
@@ -34,11 +35,7 @@ const project = ref({
 });
 const members = ref([]);
 const tasks = ref([]);
-const files = ref([{
-    fileName: 'file1',
-    description: 'file1',
-    studentName: 'lokyoh',
-}]);
+const files = ref([]);
 const load = ref(false);
 const tload = ref(true);
 const fload = ref(true);
@@ -52,12 +49,12 @@ async function loadProject() {
         if (project.value == null) {
             window.location.replace("/404");
         }
-
     } catch (error) {
         console.error("查询失败:", error);
+        return
     }
     try {
-        const mr = await fetchMemers(pid);
+        const mr = await fetchProjectMemers(pid);
         members.value = mr.data.data;
     } catch (error) {
         console.error("查询失败:", error);
@@ -65,7 +62,7 @@ async function loadProject() {
     if (project.value.role != null) {
         tload.value = true;
         try {
-            const tr = await fetchTask(pid);
+            const tr = await fetchPrjectTasks(pid);
             tasks.value = tr.data.data;
         } catch (error) {
             console.error("查询失败:", error);
@@ -74,24 +71,41 @@ async function loadProject() {
     }
     fload.value = true;
     try {
-        const fr = await fetchProjectFile(pid);
+        const fr = await fetchProjectFiles(pid);
         files.value = fr.data.data;
     } catch (error) {
         console.error("查询失败:", error);
     }
-    files.value = [{
-        fileName: 'file1',
-        description: 'file1',
-        studentName: 'lokyoh',
-    },{
-        fileName: 'file2',
-        description: 'file2',
-        studentName: 'lokyoh',
-    },]
     fload.value = false;
 };
 
 loadProject();
+
+const NPopen = ref<boolean>(false);
+
+const PForm = reactive({
+  name: '',
+  description: '',
+  teacherId: null,
+  classId: null,
+  startDate: null,
+});
+
+const PFRules: Record<string, Rule[]> = {
+  name: [{ required: true, message: '请输入项目名称' }],
+  description: [{ required: true, message: '请输入项目描述' }],
+  teacherId: [{ required: false, message: '请选择指导教师' }],
+  classId: [{ required: false, message: '请选择班级' }],
+  startDate: [{ required: true, message: '请选择开始时间', type: 'object' }],
+};
+
+const showDrawer = () => {
+    NPopen.value = true;
+}
+
+const onNPClose = () => {
+    NPopen.value = false;
+}
 </script>
 
 <template>
@@ -125,7 +139,7 @@ loadProject();
                 </a-table>
                 <var style="display: flex;justify-content: right;"
                     v-show="project.role == 'leader' && project.status == 'normal'">
-                    <a-button>新建任务</a-button>
+                    <a-button @click="showDrawer">新建任务</a-button>
                 </var>
             </a-card>
             <a-card title="文件">
@@ -189,4 +203,22 @@ loadProject();
         <h1>项目数据加载失败。</h1>
         <router-link to="/">返回首页</router-link>
     </a-layout>
+    <a-drawer
+        title="新建任务"
+        :width="720"
+        :open="NPopen"
+        :body-style="{ paddingBottom: '80px' }"
+        :footer-style="{ textAlign: 'right' }"
+        @close="onNPClose"
+    >
+        <a-form :model="PForm" :rules="PFRules" layout="horizontal" @finish="">
+            <a-form-item label="姓名" name="name">
+                <a-input v-model:value="PForm.name" placeholder="请输入项目名称"></a-input>
+            </a-form-item>
+            <a-form-item label="描述" name="description">
+                <a-textarea v-model:value="PForm.description" placeholder="请输入项目描述"></a-textarea>
+            </a-form-item>
+            <a-button type="primary" html-type="submit">创建</a-button>
+        </a-form>
+    </a-drawer>
 </template>
