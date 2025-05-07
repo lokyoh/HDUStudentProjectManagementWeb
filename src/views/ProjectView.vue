@@ -212,11 +212,11 @@ const onNPClose = () => {
         @close="onNPClose"
     >
         <a-form :model="PForm" :rules="PFRules" layout="horizontal" @finish="">
-            <a-form-item label="姓名" name="name">
-                <a-input v-model:value="PForm.name" placeholder="请输入项目名称"></a-input>
+            <a-form-item label="任务名" name="name">
+                <a-input v-model:value="PForm.name" placeholder="请输入任务名称"></a-input>
             </a-form-item>
-            <a-form-item label="描述" name="description">
-                <a-textarea v-model:value="PForm.description" placeholder="请输入项目描述"></a-textarea>
+            <a-form-item label="任务描述" name="description">
+                <a-textarea v-model:value="PForm.description" placeholder="请输入任务描述"></a-textarea>
             </a-form-item>
             <a-button type="primary" html-type="submit">创建</a-button>
         </a-form>

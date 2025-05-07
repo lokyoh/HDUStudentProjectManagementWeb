@@ -92,8 +92,11 @@ loadReview();
                     <a-table-column title="负责人" dataIndex="studentName" key="studentName" />
                 </a-table>
             </a-card>
-            <a-card>
-                e
+            <a-card style="align-items: center;">
+                <a-textarea></a-textarea>
+                <var style="display: flex;justify-content: center;margin-top: 10px;">
+                    <a-button>提交</a-button>
+                </var>
             </a-card>
         </a-layout-content>
         <a-layout-sider theme="light" style="margin-right: 5px;">

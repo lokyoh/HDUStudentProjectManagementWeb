@@ -93,7 +93,7 @@ const passwordsMatch = computed(() => {
 <template>
     <a-card title="我的信息" style="max-width: 600px; margin: auto;">
     <template v-if="!isEditing">
-      <a-descriptions bordered>
+      <a-descriptions bordered :column=1>
         <a-descriptions-item label="姓名">{{ studentInfo.name }}</a-descriptions-item>
         <a-descriptions-item label="学号">{{ studentInfo.studentId }}</a-descriptions-item>
         <a-descriptions-item label="班级">{{ studentInfo.classNumber }}</a-descriptions-item>

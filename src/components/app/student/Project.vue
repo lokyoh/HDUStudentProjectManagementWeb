@@ -1,21 +1,32 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { api } from "@/assets/api";
 import apiClient from "@/assets/api";
 import type { Rule } from "ant-design-vue/es/form";
+import dayjs, { Dayjs } from 'dayjs';
 
 const searchParams = ref({
     creatorId: null,
     classId: null,
+    teacherId: null,
     status: null,
-    reviewStatus: null,
 });
+
+const params = ref({
+    classes: [{classId:null,className:null}],
+    creators: [{creatorId:null,creatorName:null}],
+    teachers:[{teacherId:null,teacherName:null}],
+})
 
 const projects = ref([]);
 const loading = ref(false);
 
 function fetchProjects(params: any) {
     return apiClient.get(`${api.apiUrl}/project/list`, { params });
+}
+
+function fetchParams() {
+    return apiClient.get(`${api.apiUrl}/project/search/params`)
 }
 
 async function handleSearch(){
@@ -30,14 +41,28 @@ async function handleSearch(){
     loading.value = false;
 };
 
-handleSearch();
+async function getParams(){
+    try {
+        const response = await fetchParams();
+        params.value = response.data.data;
+    } catch (error) {
+        console.error("查询失败:", error);
+    }
+};
+
+onMounted(handleSearch);
+onMounted(getParams);
 
 function newProject(params: any) {
-    return apiClient.post(`${api.apiUrl}/project/student/create`);
+    return apiClient.put(`${api.apiUrl}/project/student/create`);
 }
 
 async function handleNewProject() {
     console.log('click')
+}
+
+function fetchClasses(params: any) {
+    return apiClient.get(`${api.apiUrl}/class/list`, { params });
 }
 
 const NPopen = ref<boolean>(false);
@@ -47,7 +72,7 @@ const PForm = reactive({
   description: '',
   teacherId: null,
   classId: null,
-  startDate: null,
+  startDate: dayjs(),
 });
 
 const PFRules: Record<string, Rule[]> = {
@@ -55,7 +80,7 @@ const PFRules: Record<string, Rule[]> = {
   description: [{ required: true, message: '请输入项目描述' }],
   teacherId: [{ required: false, message: '请选择指导教师' }],
   classId: [{ required: false, message: '请选择班级' }],
-  startDate: [{ required: true, message: '请选择开始时间', type: 'object' }],
+  startDate: [{ required: true, message: '请选择开始时间'}],
 };
 
 const showDrawer = () => {
@@ -65,38 +90,53 @@ const showDrawer = () => {
 const onNPClose = () => {
     NPopen.value = false;
 }
+
+const onSelect = (value: Dayjs) => {
+  PForm.startDate = value;
+};
 </script>
 
 <template>
-    <a-card title="我的项目">
+    <a-card title="我的项目" style="min-height: 50vh;">
         <template #extra><a-button @click="showDrawer" type="primary">新建项目</a-button></template>
         <a-form layout="inline">
-            <a-form-item label="创建者 ID">
-                <a-input v-model:value="searchParams.creatorId" placeholder="输入创建者 ID" />
+            <a-form-item label="创建者">
+                <a-select
+                    v-model:value="searchParams.creatorId" 
+                    placeholder="请选择"
+                    :options="params.creators"
+                    :field-names="{ label: 'creatorName', value: 'creatorId' }"
+                    allow-clear
+                />
             </a-form-item>
-            <a-form-item label="班级 ID">
-                <a-input v-model:value="searchParams.classId" placeholder="输入班级 ID" />
+            <a-form-item label="班级">
+                <a-select
+                    v-model:value="searchParams.classId" 
+                    placeholder="请选择"
+                    :options="params.classes"
+                    :field-names="{ label: 'className', value: 'classId' }"
+                    allow-clear
+                />
+            </a-form-item>
+            <a-form-item label="指导老师">
+                <a-select
+                    v-model:value="searchParams.teacherId" 
+                    placeholder="请选择"
+                    :options="params.teachers"
+                    :field-names="{ label: 'teacherName', value: 'teacherId' }"
+                    allow-clear
+                />
             </a-form-item>
             <a-form-item label="状态">
-                <a-select v-model:value="searchParams.status" placeholder="选择状态">
-                    <a-select-option value="">未选择</a-select-option>
-                    <a-select-option value="进行中">进行中</a-select-option>
-                    <a-select-option value="已完成">已完成</a-select-option>
-                    <a-select-option value="已取消">已取消</a-select-option>
-                </a-select>
-            </a-form-item>
-            <a-form-item label="审核状态">
-                <a-select v-model:value="searchParams.reviewStatus" placeholder="选择审核状态">
-                    <a-select-option value="">未选择</a-select-option>
-                    <a-select-option value="待审核">待审核</a-select-option>
-                    <a-select-option value="审核通过">审核通过</a-select-option>
-                    <a-select-option value="审核不通过">审核不通过</a-select-option>
+                <a-select v-model:value="searchParams.status" placeholder="请选择" allow-clear>
+                    <a-select-option value="normal">进行中</a-select-option>
+                    <a-select-option value="finish">已完成</a-select-option>
+                    <a-select-option value="cancel">已取消</a-select-option>
                 </a-select>
             </a-form-item>
             <a-form-item>
                 <a-button type="primary" html-type="submit" @click="handleSearch">查询</a-button>
             </a-form-item>
-            <a-button @click="newProject">新项目</a-button>
         </a-form>
         <a-table :dataSource="projects" :loading="loading" rowKey="id" bordered>
             <a-table-column title="项目名称" dataIndex="name" key="name" />
@@ -124,6 +164,9 @@ const onNPClose = () => {
                 <template v-if="column.dataIndex === 'status'">
                     {{ api.transProjectStatus(record.status) }}
                 </template>
+                <template v-if="column.dataIndex === 'endDate'">
+                    {{ record.endDate? record.endDate:'未定' }}
+                </template>
             </template>
         </a-table>
     </a-card>
@@ -136,12 +179,24 @@ const onNPClose = () => {
         @close="onNPClose"
     >
         <a-form :model="PForm" :rules="PFRules" layout="horizontal" @finish="handleNewProject">
-            <a-form-item label="姓名" name="name">
+            <a-form-item label="名称" name="name">
                 <a-input v-model:value="PForm.name" placeholder="请输入项目名称"></a-input>
             </a-form-item>
             <a-form-item label="描述" name="description">
                 <a-textarea v-model:value="PForm.description" placeholder="请输入项目描述"></a-textarea>
             </a-form-item>
+            <a-form-item label="班级" name="classId">
+                <a-input v-model:value="PForm.description" placeholder="请输入项目描述"></a-input>
+            </a-form-item>
+            <a-form-item label="指导教师" name="classId">
+                <a-input v-model:value="PForm.description" placeholder="请输入项目描述"></a-input>
+            </a-form-item>
+            <a-form-item label="开始日期" name="startDate">
+                {{ PForm.startDate.format('YYYY-MM-DD') }}
+            </a-form-item>
+            <div :style="{ width: '300px', border: '1px solid #d9d9d9', borderRadius: '4px', marginBottom: '10px' }">
+                <a-calendar :value="PForm.startDate" @select="onSelect" :fullscreen="false"/>
+            </div>
             <a-button type="primary" html-type="submit">创建</a-button>
         </a-form>
     </a-drawer>

@@ -2,26 +2,26 @@
 import Footer from '../Footer.vue';
 import { ref, computed, defineAsyncComponent } from 'vue';
 
-const selectedKeys = ref<string[]>(['project']);
+const selectedKeys = ref<string[]>(['user']);
 
 const content = computed(() => {
   const key = selectedKeys.value[0];
   switch (key) {
-    case 'info':
+    case 'user':
       return defineAsyncComponent(() =>
-        import('./student/Info.vue')
+        import('./admin/User.vue')
       );
-    case 'task':
+    case 'anno':
       return defineAsyncComponent(() =>
-        import('./student/Task.vue')
+        import('./admin/Anno.vue')
       );
     case 'project':
       return defineAsyncComponent(() =>
-        import('./student/Project.vue')
+        import('./admin/Project.vue')
       );
     case 'class':
       return defineAsyncComponent(() =>
-        import('./student/Class.vue')
+        import('./admin/Class.vue')
       );
   }
 })
@@ -31,17 +31,17 @@ const content = computed(() => {
   <a-layout style="top: 65px; position: relative;">
     <a-layout-sider theme="light">
       <a-menu mode="inline" v-model:selectedKeys="selectedKeys">
-        <a-menu-item key="project">
-          <span>我的项目</span>
+        <a-menu-item key="user">
+          <span>用户</span>
         </a-menu-item>
-        <a-menu-item key="task">
-          <span>我的任务</span>
+        <a-menu-item key="project">
+          <span>项目</span>
         </a-menu-item>
         <a-menu-item key="class">
-          <span>我的班级</span>
+          <span>班级</span>
         </a-menu-item>
-        <a-menu-item key="info">
-          <span>我的信息</span>
+        <a-menu-item key="anno">
+          <span>公告</span>
         </a-menu-item>
       </a-menu>
     </a-layout-sider>
