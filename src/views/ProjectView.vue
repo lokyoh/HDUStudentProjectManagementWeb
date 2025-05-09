@@ -1,10 +1,11 @@
 <script setup lang="ts">
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { api } from "@/assets/api";
 import apiClient from "@/assets/api";
 import { useRoute } from 'vue-router';
 import AppHeader from "../components/Header.vue";
 import type { Rule } from "ant-design-vue/es/form";
+import { message } from "ant-design-vue";
 
 const route = useRoute();
 
@@ -25,15 +26,16 @@ function fetchProjectFiles(id: any) {
 }
 
 const project = ref({
-    name: null,
-    description: null,
+    id: null,
+    name: '',
+    description: '',
     role: null,
     teacherName: null,
     status: null,
     classId: null,
     className: null,
 });
-const members = ref([]);
+const members = ref([{ id: null }]);
 const tasks = ref([]);
 const files = ref([]);
 const load = ref(false);
@@ -49,6 +51,9 @@ async function loadProject() {
         if (project.value == null) {
             window.location.replace("/404");
         }
+        projectParam.name = project.value.name
+        projectParam.description = project.value.description
+        PForm.projectId = project.value.id;
     } catch (error) {
         console.error("查询失败:", error);
         return
@@ -56,6 +61,7 @@ async function loadProject() {
     try {
         const mr = await fetchProjectMemers(pid);
         members.value = mr.data.data;
+        PForm.assignedTo = members.value[0].id
     } catch (error) {
         console.error("查询失败:", error);
     }
@@ -79,24 +85,57 @@ async function loadProject() {
     fload.value = false;
 };
 
-loadProject();
+onMounted(loadProject);
+
+const projectParam = reactive({
+    id: route.params.id,
+    name: '',
+    description: '',
+});
+
+async function changeInfo() {
+    try {
+        const response = await apiClient.put(`${api.apiUrl}/project/student/change`, projectParam);
+        const data = response.data;
+        if (data.code === 0) {
+            message.success(data.message);
+            loadProject();
+            Popen.value = false;
+        } else {
+            message.error(data.message)
+        }
+    } catch (error) {
+        console.error("请求失败:", error);
+    }
+}
+
+const PDRules: Record<string, Rule[]> = {
+    name: [{ required: true, message: '请输入项目名称' }],
+    description: [{ required: true, message: '请输入项目描述' }],
+};
+
+const Popen = ref<boolean>(false);
+
+const showPDrawer = () => {
+    Popen.value = true;
+}
+
+const onPClose = () => {
+    Popen.value = false;
+}
 
 const NPopen = ref<boolean>(false);
 
 const PForm = reactive({
-  name: '',
-  description: '',
-  teacherId: null,
-  classId: null,
-  startDate: null,
+    projectId: null,
+    name: '',
+    description: '',
+    assignedTo: null,
 });
 
 const PFRules: Record<string, Rule[]> = {
-  name: [{ required: true, message: '请输入项目名称' }],
-  description: [{ required: true, message: '请输入项目描述' }],
-  teacherId: [{ required: false, message: '请选择指导教师' }],
-  classId: [{ required: false, message: '请选择班级' }],
-  startDate: [{ required: true, message: '请选择开始时间', type: 'object' }],
+    name: [{ required: true, message: '请输入项目名称' }],
+    description: [{ required: true, message: '请输入项目描述' }],
 };
 
 const showDrawer = () => {
@@ -105,6 +144,68 @@ const showDrawer = () => {
 
 const onNPClose = () => {
     NPopen.value = false;
+}
+
+async function newTask() {
+    try {
+        const response = await apiClient.put(`${api.apiUrl}/task/create`, PForm);
+        const data = response.data;
+        if (data.code === 0) {
+            message.success(data.message);
+            loadProject();
+            NPopen.value = false;
+        } else {
+            message.error(data.message)
+        }
+    } catch (error) {
+        console.error("请求失败:", error);
+    }
+}
+
+async function addMember() {
+    try {
+        const response = await apiClient.post(`${api.apiUrl}/project/student/addMember?pid=${route.params.id}&sid=${MemberForm.sid}`);
+        const data = response.data;
+        if (data.code === 0) {
+            message.success(data.message);
+            loadProject();
+            Mopen.value = false;
+        } else {
+            message.error(data.message)
+        }
+    } catch (error) {
+        console.error("请求失败:", error);
+    }
+}
+
+const classMembers = ref([])
+
+const Mopen = ref<boolean>(false);
+
+const MemberForm = reactive({
+    sid: null,
+})
+
+const MDRules: Record<string, Rule[]> = {
+    sid: [{ required: true, message: '请选择' }],
+};
+
+async function showMDrawer() {
+    try {
+        MemberForm.sid = null;
+        const response = await apiClient.get(`${api.apiUrl}/class/get/${project.value.classId}`);
+        const cm = response.data.data.members;
+        const m = new Set(members.value.map(item => item.id));
+        classMembers.value = cm.filter((item: { id: null; }) => !m.has(item.id));
+    } catch (error) {
+        console.error("查询失败:", error);
+        return
+    }
+    Mopen.value = true;
+}
+
+const onMClose = () => {
+    Mopen.value = false;
 }
 </script>
 
@@ -116,7 +217,7 @@ const onNPClose = () => {
                 <p>{{ project.description }}</p>
                 <var style="display: flex;justify-content: right;"
                     v-show="project.role == 'leader' && project.status == 'normal'">
-                    <a-button @click="changeInfo">修改信息</a-button>
+                    <a-button @click="showPDrawer">修改信息</a-button>
                 </var>
             </a-card>
             <a-card title="任务" v-show="project.role != null">
@@ -147,7 +248,7 @@ const onNPClose = () => {
                     <a-table-column title="任务名称" dataIndex="fileName" key="fileName" />
                     <a-table-column title="任务描述" dataIndex="description" key="description" />
                     <a-table-column title="负责人" dataIndex="studentName" key="studentName" />
-                    <a-table-column v-if="project.role=='leader'" title="操作" key="action" />
+                    <a-table-column v-if="project.role == 'leader'" title="操作" key="action" />
                     <template #bodyCell="{ column, record }">
                         <template v-if="column.dataIndex === 'fileName'">
                             <a>
@@ -163,7 +264,11 @@ const onNPClose = () => {
                 </a-table>
                 <var style="display: flex;justify-content: right;"
                     v-show="(project.role == 'leader' || project.role == 'member') && project.status == 'normal'">
-                    <a-button @click="uploadFile">上传文件</a-button>
+                    <a-upload name="file">
+                        <a-button>
+                            上传文件
+                        </a-button>
+                    </a-upload>
                 </var>
             </a-card>
         </a-layout-content>
@@ -174,7 +279,7 @@ const onNPClose = () => {
                 </p>
                 <var style="display: flex;justify-content: center;"
                     v-show="project.role == 'leader' && project.teacherName == null && project.status == 'normal'">
-                    <a-button @click="addTeacher">添加导师</a-button>
+                    <a-button @click="">添加导师</a-button>
                 </var>
             </a-card>
             <a-card title="所属班级" v-show="project.classId != null">
@@ -194,7 +299,7 @@ const onNPClose = () => {
                 </a-list>
                 <var style="display: flex;justify-content: center;"
                     v-show="project.role == 'leader' && project.status == 'normal'">
-                    <a-button @click="addMember">添加成员</a-button>
+                    <a-button @click="showMDrawer">添加成员</a-button>
                 </var>
             </a-card>
         </a-layout-sider>
@@ -203,22 +308,40 @@ const onNPClose = () => {
         <h1>项目数据加载失败。</h1>
         <router-link to="/">返回首页</router-link>
     </a-layout>
-    <a-drawer
-        title="新建任务"
-        :width="720"
-        :open="NPopen"
-        :body-style="{ paddingBottom: '80px' }"
-        :footer-style="{ textAlign: 'right' }"
-        @close="onNPClose"
-    >
-        <a-form :model="PForm" :rules="PFRules" layout="horizontal" @finish="">
+    <a-drawer title="新建任务" :width="720" :open="NPopen" :body-style="{ paddingBottom: '80px' }"
+        :footer-style="{ textAlign: 'right' }" @close="onNPClose">
+        <a-form :model="PForm" :rules="PFRules" layout="horizontal" @finish="newTask">
             <a-form-item label="任务名" name="name">
                 <a-input v-model:value="PForm.name" placeholder="请输入任务名称"></a-input>
             </a-form-item>
             <a-form-item label="任务描述" name="description">
                 <a-textarea v-model:value="PForm.description" placeholder="请输入任务描述"></a-textarea>
             </a-form-item>
+            <p>负责人:
+                <a-select v-model:value="PForm.assignedTo" style="width: 150px;" :options="members"
+                    :field-names="{ label: 'name', value: 'id' }" />
+            </p>
             <a-button type="primary" html-type="submit">创建</a-button>
+        </a-form>
+    </a-drawer>
+    <a-drawer title="修改信息" :width="720" :open="Popen" :body-style="{ paddingBottom: '80px' }"
+        :footer-style="{ textAlign: 'right' }" @close="onPClose">
+        <a-form :model="projectParam" :rules="PDRules" layout="horizontal" @finish="changeInfo">
+            <a-form-item label="名称" name="name">
+                <a-input v-model:value="projectParam.name" placeholder="请输入任务名称"></a-input>
+            </a-form-item>
+            <a-form-item label="描述" name="description">
+                <a-textarea v-model:value="projectParam.description" placeholder="请输入任务描述"></a-textarea>
+            </a-form-item>
+            <a-button type="primary" html-type="submit">修改</a-button>
+        </a-form>
+    </a-drawer>
+    <a-drawer title="添加成员" :width="720" :open="Mopen" :body-style="{ paddingBottom: '80px' }"
+        :footer-style="{ textAlign: 'right' }" @close="onMClose">
+        <a-form :model="MemberForm" :rules="MDRules" layout="horizontal" @finish="addMember">
+            <a-form-item label="学生" name="id"><a-select v-model:value="MemberForm.sid" style="width: 150px;"
+                    :options="classMembers" :field-names="{ label: 'name', value: 'id' }"></a-select></a-form-item>
+            <a-button type="primary" html-type="submit">添加</a-button>
         </a-form>
     </a-drawer>
 </template>

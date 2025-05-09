@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import AppHeader from "../components/Header.vue";
 import { useRoute } from 'vue-router';
-import { reactive, ref } from "vue";
+import { onMounted, reactive, ref } from "vue";
 import { api } from "@/assets/api";
 import apiClient from "@/assets/api";
 import router from "@/router";
+import { message } from "ant-design-vue";
 
 if (api.getCookie('role') !== 'teacher'){
     router.go(-1);
@@ -58,7 +59,6 @@ async function loadReview() {
     const tid = route.params.id;
     try {
         const response = await fetchReview(tid);
-        console.log(response.data.data)
         review.value = response.data.data;
         load.value = true;
         if (review.value == null) {
@@ -72,7 +72,29 @@ async function loadReview() {
     }
 }
 
-loadReview();
+onMounted(loadReview);
+
+const result = ref({
+    id: null,
+    status: 'pass',
+    comments: '',
+});
+
+async function submitReview() {
+    try {
+        result.value.id = review.value.id
+        const response = await apiClient.post(`${api.apiUrl}/review/check`, result.value);
+        const data = response.data;
+        if (data.code === 0) {
+            message.success(data.message);
+            loadReview();
+        } else {
+            message.error(data.message)
+        }
+    } catch (error) {
+        console.error("请求失败:", error);
+    }
+}
 </script>
 
 <template>
@@ -92,10 +114,20 @@ loadReview();
                     <a-table-column title="负责人" dataIndex="studentName" key="studentName" />
                 </a-table>
             </a-card>
-            <a-card style="align-items: center;">
-                <a-textarea></a-textarea>
+            <a-card title="审批内容" v-show="review.status === 'pending'">
+                <var>
+                    结果:
+                    <a-select style="width: 100px;" v-model:value="result.status">
+                        <a-select-option value="pass">通过</a-select-option>
+                        <a-select-option value="fail">不通过</a-select-option>
+                    </a-select>
+                </var>
+                <var>
+                    <p>意见:</p>
+                    <a-textarea v-model:value="result.comments"></a-textarea>
+                </var>
                 <var style="display: flex;justify-content: center;margin-top: 10px;">
-                    <a-button>提交</a-button>
+                    <a-button @click="submitReview">提交</a-button>
                 </var>
             </a-card>
         </a-layout-content>

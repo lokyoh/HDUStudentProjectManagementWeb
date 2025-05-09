@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import AppHeader from "../components/Header.vue";
 import { useRoute } from 'vue-router';
-import { reactive, ref } from "vue";
+import { computed, onMounted, reactive, ref } from "vue";
 import { api } from "@/assets/api";
 import apiClient from "@/assets/api";
+import { message } from "ant-design-vue";
+import type { Rule } from "ant-design-vue/es/form";
 
 const route = useRoute();
 
@@ -41,7 +43,61 @@ async function loadClasses() {
     }
 }
 
-loadClasses();
+onMounted(loadClasses);
+
+// 添加学生
+const studentParam = ref();
+const students = ref([{ uid: null, name: null, id: null }]);
+students.value = [];
+const formattedStudentList = computed(() => {
+    return students.value.map(item => ({
+        ...item,
+        formattedLabel: `${item.name}-${item.id}`,
+    }));
+});
+
+async function fetchStudent() {
+    try {
+        const response = await apiClient.get(`${api.apiUrl}/user/student/param?param=${studentParam.value}`);
+        students.value = response.data.data;
+    } catch (error) {
+        console.error("请求失败:", error);
+    }
+}
+
+async function addStudent() {
+    try {
+        const response = await apiClient.post(`${api.apiUrl}/class/add/student?cid=${route.params.id}&sid=${studentForm.sid}`);
+        const data = response.data;
+        if (data.code === 0) {
+            message.success(data.message);
+            loadClasses();
+            studentOpen.value = false;
+        } else {
+            message.error(data.message)
+        }
+    } catch (error) {
+        console.error("请求失败:", error);
+    }
+}
+
+const studentOpen = ref<boolean>(false);
+
+const studentForm = reactive({
+    sid: null,
+})
+
+const studentRules: Record<string, Rule[]> = {
+    sid: [{ required: true, message: '请选择' }],
+};
+
+async function showStudentDrawer() {
+    studentOpen.value = true;
+}
+
+const onStudentClose = () => {
+    studentOpen.value = false;
+}
 </script>
 
 <template>
@@ -50,7 +106,7 @@ loadClasses();
         <a-layout-content style="margin-left: 5px;">
             <a-card :title="classes.name">
                 <p>{{ classes.description }}</p>
-                <var style="display: flex;justify-content: right;" v-show="classes.role=='teacher'">
+                <var style="display: flex;justify-content: right;" v-show="classes.role=='teachere'">
                     <a-button>修改信息</a-button>
                 </var>
             </a-card>
@@ -80,8 +136,8 @@ loadClasses();
                     </template>
                 </a-table>
                 <var style="display: flex;justify-content: right;"
-                    v-show="classes.role == 'teacher' || classes.role == 'student'">
-                    <a-button @click="">新建任务</a-button>
+                    v-show="classes.role == 'student'">
+                    <a-button @click="">新建项目</a-button>
                 </var>
             </a-card>
         </a-layout-content>
@@ -99,7 +155,7 @@ loadClasses();
                 </a-list>
                 <var style="display: flex;justify-content: center;"
                     v-show="classes.role == 'teacher'">
-                    <a-button>添加成员</a-button>
+                    <a-button @click="showStudentDrawer">添加成员</a-button>
                 </var>
             </a-card>
         </a-layout-sider>
@@ -108,4 +164,15 @@ loadClasses();
         <h1>项目数据加载失败。</h1>
         <router-link to="/">返回首页</router-link>
     </a-layout>
+    <a-drawer title="添加学生" :width="720" :open="studentOpen" :body-style="{ paddingBottom: '80px' }"
+        :footer-style="{ textAlign: 'right' }" @close="onStudentClose">
+        <a-form :model="studentForm" :rules="studentRules" layout="horizontal" @finish="addStudent">
+            <a-input v-model:value="studentParam" placeholder="请输入学号或姓名" style="width: 150px;"></a-input>
+            <a-button @click="fetchStudent">查询</a-button><br>
+            <a-select v-model:value="studentForm.sid" placeholder="请选择" style="width: 150px;"
+                :options="formattedStudentList" :field-names="{ label: 'formattedLabel', value: 'uid' }"
+            allow-clear />
+            <a-button type="primary" html-type="submit">添加</a-button>
+        </a-form>
+    </a-drawer>
 </template>

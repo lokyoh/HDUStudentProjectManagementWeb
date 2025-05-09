@@ -2,7 +2,7 @@ import Project from "@/components/app/student/Project.vue";
 import axios from "axios";
 
 class API {
-    apiUrl = "http://localhost:8080/api";
+    apiUrl = "http://121.40.82.129:8080/api";
     loginState = false;
 
     getCookie(value: string) {

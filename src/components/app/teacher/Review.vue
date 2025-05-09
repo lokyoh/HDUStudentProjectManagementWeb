@@ -56,12 +56,12 @@ handleSearch();
             <a-table-column title="操作" dataIndex="action" key="action" />
             <template #bodyCell="{ column, record }">
                 <template v-if="column.dataIndex === 'taskName'">
-                    <router-link :to="`/task/${record.id}`">
+                    <router-link :to="`/task/${record.taskId}`">
                         {{ record.taskName }}
                     </router-link>
                 </template>
                 <template v-if="column.dataIndex === 'projectName'">
-                    <router-link :to="`/project/${record.id}`">
+                    <router-link :to="`/project/${record.projectId}`">
                         {{ record.projectName }}
                     </router-link>
                 </template>

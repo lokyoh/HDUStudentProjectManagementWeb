@@ -31,6 +31,7 @@ handleSearch();
 
 <template>
     <a-card title="我的班级" style="max-width: 800px; margin: auto;">
+        <template #extra><a-button @click="" type="primary">新建班级</a-button></template>
         <a-form layout="inline">
             <a-form-item>
                 <!-- <a-button type="primary" html-type="submit" @click="handleSearch">刷新</a-button> -->
